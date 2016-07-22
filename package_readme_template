@@ -1,0 +1,27 @@
+Save this as a .md file in the repository
+
+# NAME
+DESCRIPTION
+
+## Author
+Jeff Neyhart
+
+## Introduction
+PARAGRAPH EXPLAINING BASIC PURPOSE OF THE PACKAGE
+
+## Installation
+
+Install the package from CRAN
+```
+install.packages("NAME")
+```
+
+Or install the developmental version from GitHub via the `devtools` package:
+```
+devtools::install_github("neyhartj/NAME")
+```
+
+## Examples
+EXAMPLES OF USING SOME FUNCTIONS
+
+## References
