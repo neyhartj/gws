@@ -1,0 +1,34 @@
+## Creating a new R package in Rstudio
+
+Unlike other projects with GitHub, it is often easier to create the package locally
+then begin version control.
+
+First navigate to the directory in which you want to create the package
+
+```
+setwd("C:/Users/Jeff/Google Drive/")
+```
+
+Next use devtools to create the folder for the package. This creates the necessary 
+starting files like the `DESCRIPTION` and `NAMESPACE`.
+
+```
+devtools::create("newpackage")
+```
+
+Go to GitHub and create a new repository, BUT WITHOUT THE README OR LICENSE.
+
+Now click on Tools > Shell to open a shell terminal. Initiate the git repository
+by moving to the package directory.
+
+```
+git init
+
+git add .
+git commit -m "First commit"
+```
+
+Grab the remote repository URL from GitHub
+
+```
+git remote add origin _remote repository_
