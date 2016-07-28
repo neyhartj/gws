@@ -1,5 +1,3 @@
-Save this as a .md file in the repository
-
 # gws
 A package to perform genomic or genome-wide selection.
 
