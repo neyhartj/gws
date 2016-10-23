@@ -27,7 +27,7 @@
 #' @export
 #'
 #'
-convert.hapmap <- function(hapmap, encoding = "rrBLUP") {
+hapmap_encoding <- function(hapmap, encoding = "rrBLUP") {
 
   # Error
   hapmap <- as.data.frame(hapmap)

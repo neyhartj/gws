@@ -27,10 +27,7 @@
 #'
 #' @importFrom rrBLUP mixed.solve
 #'
-#'
-#'
-#'
-#'
+#' @export
 #'
 cross.val <- function(phenotypes, genotypes, cv.method = c("fractional", "k-fold"), frac.train = 0.60, frac.reps = 250, folds = 10, fold.reps = 25) {
 
