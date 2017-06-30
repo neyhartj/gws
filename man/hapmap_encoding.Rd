@@ -33,4 +33,3 @@ TASSEL. The remaining columns are samples. Genotypes are encoded in {1, 0, -1}
 format where 1 is homozygous for the first allele, 0 is heterozygous, and -1 is
 homozygous for the second allele. Missing data is denoted with \code{NA}.
 }
-

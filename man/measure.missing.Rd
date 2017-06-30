@@ -9,4 +9,3 @@ measure.missing(x, type = "numeric")
 \description{
 Measure the missingness of a SNP or entry
 }
-

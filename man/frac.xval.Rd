@@ -9,4 +9,3 @@ frac.xval(y, M, frac.train, reps)
 \description{
 Fractional Cross Validation
 }
-

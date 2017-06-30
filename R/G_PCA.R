@@ -19,7 +19,7 @@
 #'
 #' @export
 #'
-G.PCA <- function(G, x.PC, y.PC, col = NULL, scree = FALSE, return.data = FALSE) {
+G_PCA <- function(G, x.PC, y.PC, col = NULL, scree = FALSE, return.data = FALSE) {
 
   # Error checking
   if (nrow(G) != ncol(G)) stop("'G' is not a square matrix.")

@@ -29,7 +29,7 @@
 #'
 #' @export
 #'
-cross.val <- function(phenotypes, genotypes, cv.method = c("fractional", "k-fold"), frac.train = 0.60, frac.reps = 250, folds = 10, fold.reps = 25) {
+cross_val <- function(phenotypes, genotypes, cv.method = c("fractional", "k-fold"), frac.train = 0.60, frac.reps = 250, folds = 10, fold.reps = 25) {
 
   # Error checking
   if (! cv.method %in% c("fractional", "k-fold")) stop("The 'cv.method' input is not valid. Valid inputs are 'fractional' and/or 'k-fold.'")

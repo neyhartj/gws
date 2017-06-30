@@ -15,4 +15,3 @@ is the number of markers.}
 \description{
 Summarize a marker matrix
 }
-

@@ -12,4 +12,3 @@ convert_hapmap(hapmap)
 \description{
 Convert a hapmap to a genotype matrix
 }
-

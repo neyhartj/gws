@@ -9,4 +9,3 @@ kfold.xval(y, M, folds, reps)
 \description{
 K-fold Cross Validation
 }
-

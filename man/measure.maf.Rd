@@ -9,4 +9,3 @@ measure.maf(x, type = "numeric")
 \description{
 Measure the minor allele frequency of a SNP
 }
-

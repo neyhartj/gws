@@ -9,4 +9,3 @@ measure.het(x, type = "numeric")
 \description{
 Measure the heterozygosity of a SNP or entry
 }
-
