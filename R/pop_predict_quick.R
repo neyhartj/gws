@@ -116,7 +116,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
   mar_var_base <-  mar_specs %>%
     select(-1:-3) %>%
     as.matrix() %>%
-    {. ^ 2}
+    {. ^ 2} %>%
+    array(dim = c(nrow(.), 1, ncol(.)), dimnames = list(marker_names, NULL, traits))
 
 
   ## Functions for covariance
@@ -160,12 +161,21 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
     lapply(pairwise_eff_prod, "[[", trait) ) %>%
     structure(names = traits)
 
+  # Empty array
+  mar_covar_base <- array(data = NA, dim = c(length(marker_names), length(marker_names), length(traits)),
+                          dimnames = list(marker_names, marker_names, traits))
+
 
   # Calculate covariance between pairs of markers for each trait
-  mar_covar_base <- pairwise_eff_prod1 %>%
+  trait_cov <- pairwise_eff_prod1 %>%
     map(function(u) pmap(list(u, pairwise_D), `*`) ) %>%
     map(.bdiag) %>%
     map(`dimnames<-`, list(marker_names, marker_names))
+
+  # Convert to array
+  for (k in seq_along(trait_cov)) {
+    mar_covar_base[,,k] <- as.matrix(trait_cov[[k]])
+  }
 
   # Now calculate the inter-trait covariance
   # Only proceed if there is more than one trait
@@ -175,7 +185,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
     trait_combn <- combn(x = traits, m = 2)
     # Configure the trait names
     trait_combn_names <- apply(X = trait_combn, MARGIN = 2, FUN = paste, collapse = "_")
-    trait_combn_df <- as.data.frame(t(trait_combn), stringsAsFactors = FALSE)
+    trait_combn_mat <- matrix(data = NA, nrow = length(traits), ncol = length(traits),
+                              dimnames = list(traits, paste("cor", traits, sep = "_")))
 
     pairwise_eff_prod <- mar_specs %>%
       # Split by chromosome
@@ -199,12 +210,23 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
       lapply(pairwise_eff_prod, "[[", trait) ) %>%
       structure(names = trait_combn_names)
 
+    # Empty array
+    mar_trait_covar_base <- array(data = NA,
+                                  dim = c(length(marker_names), length(marker_names), length(trait_combn_names)),
+                                  dimnames = list(marker_names, marker_names, trait_combn_names))
+
+
     # Calculate the inter-trait covariance between pairs of markers
     # Combine chromosomes to form sparse matrices
-    mar_trait_covar_base <- pairwise_eff_prod1 %>%
+    inter_trait_cov <- pairwise_eff_prod1 %>%
       map(function(u) pmap(list(u, pairwise_D), `*`) ) %>%
       map(.bdiag) %>%
       map(`dimnames<-`, list(marker_names, marker_names))
+
+    # Convert to array
+    for (k in seq_along(inter_trait_cov)) {
+      mar_trait_covar_base[,,k] <- as.matrix(inter_trait_cov[[k]])
+    }
 
   }
 
@@ -213,8 +235,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
 
   # Iterate over the parents in the crossing block
-  predictions <- crossing.table %>%
-    by_row(function(pars) {
+  predictions <- by_row(crossing.table, function(pars) {
 
       pars <- as.character(pars)
 
@@ -226,22 +247,20 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
       # Find the parent 1 genotype of those markers and take the crossproduct for multiplication
       par1_mar_seg <- par_geno[1,mar_seg, drop = FALSE] %>%
-        crossprod()
+        crossprod() %>%
+        array(dim = c(dim(.), 1))
 
       # Subset the variance df for those markers
-      mar_var <- mar_var_base[mar_seg,, drop = FALSE] %>%
-        colSums()
+      mar_var <- apply(X = mar_var_base[mar_seg,,, drop = FALSE], MARGIN = 2, FUN = sum)
 
       # Subset the covariance and multiply by the parent 1 genotypes
       # Sum then divide by 2 to get the covariance
-      mar_covar <- mar_covar_base %>%
-        lapply("[", mar_seg, mar_seg) %>%
-        map(`*`, par1_mar_seg) %>%
-        map(sum) %>%
-        map(`/`, 2)
+      mar_covar <- apply(X = (mar_covar_base[mar_seg, mar_seg, , drop = FALSE] *
+                                par1_mar_seg[,,rep(1, length(traits)), drop = FALSE]),
+                         MARGIN = 3, FUN = sum) / 2
 
       # Combine the marker variance and covariance
-      pred_varG <- mar_var + 2 * as.numeric(mar_covar)
+      pred_varG <- mar_var + 2 * mar_covar
 
       # Calculate the mean PGV based on the markers
       pred_mu <- subset(parent_pgv, entry %in% pars, -entry) %>%
@@ -257,11 +276,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
       if (length(traits) > 1) {
 
         # Calculate the genetic covariance
-        trait_covar <- mar_trait_covar_base %>%
-          lapply("[", mar_seg, mar_seg) %>%
-          map(`*`, par1_mar_seg) %>%
-          map(sum) %>%
-          map(`/`, 2)
+        trait_covar <- apply(X = (mar_trait_covar_base[mar_seg, mar_seg, ] * par1_mar_seg[,,rep(1, length(trait_combn_names))]),
+                             MARGIN = 3, FUN = sum) / 2
 
         # Iterate over trait combinations
         pred_cor <- apply(X = trait_combn, MARGIN = 2, FUN = function(trs) {
@@ -272,16 +288,13 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
           # Extract the covariance and calculate the predicted correlation
           trait_covar[[trs_name]] / sqrt(prod(trs_pred_varG)) })
 
-        # Create a df with the trait combinations and correlations
-        pred_cor_df <- trait_combn_df %>%
-          mutate(pred_cor = pred_cor) %>%
-          bind_rows(., mutate(., V1 = V2, V2 = .$V1)) %>%
-          mutate(V2 = paste("cor", V2, sep = "_")) %>%
-          spread(V2, pred_cor)
+        # Create a mat with the trait combinations and correlations
+        trait_combn_mat[lower.tri(trait_combn_mat)] <- pred_cor
+        trait_combn_df <- as.data.frame(as.matrix(forceSymmetric(trait_combn_mat, "L")))
+
 
         # Combine with results
-        results1 <- results %>%
-          full_join(., pred_cor_df, by = c("trait" = "V1"))
+        results1 <- cbind(results, trait_combn_df)
 
       } else {
 
@@ -297,7 +310,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
   predictions %>%
     mutate(pred_mu_sp_high = pred_mu + (k_sp * pred_varG),
            pred_mu_sp_low = pred_mu - (k_sp * pred_varG)) %>%
-    select(Par1, Par2, trait, pred_mu, pred_varG, pred_mu_sp_high, pred_mu_sp_low, names(.))
+    select(1, 2, trait, pred_mu, pred_varG, pred_mu_sp_high, pred_mu_sp_low, names(.))
 
 } # Close the function
 
