@@ -4,28 +4,57 @@
 #' Calculates the expected mean, genetic variance, and superior progeny mean of a bi-parental population
 #' based on genomewide marker effects.
 #'
-#' @param G.in TBD
-#' @param y.in TBD
-#' @param map.in TBD
-#' @param crossing.table TBD
-#' @param parents TBD
-#' @param tail.p TBD
-#' @param model TBD
-#' @param map.function TBD
+#' @param G.in A \code{n} x \code{m} matrix of genetic marker information. Must be coded at \code{z = {-1, 0, 1}},
+#' where \code{1} is homozygous for the first allele, \code{-1} is homozygous for the second allele, and \code{0} is
+#' heterozygous.
+#' @param y.in A \code{data.frame} of entry names and phenotypic value. The first column must be the entry name,
+#' and subsequent columns must contain phenotypic values. Column names must be the names of the traits.
+#' @param map.in A \code{data.frame} of genetic map information for the markers in \code{G.in}. The same number
+#' of markers must be present in \code{map.in} as in \code{G.in}. The first column must be the marker name, the second
+#' column must be the chromosome, and the third column must be the genetic map position (in cM).
+#' @param crossing.table A \code{data.frame} of parental combinations from which to simulate biparental population.
+#' The first column must be parent 1, and the second column must be parent 2. All entries in \code{crossing.table}
+#' must have genotypic information in \code{G.in}.
+#' @param parents If \code{crossing.table} is not passed, a vector of entry names to serve as parents must be passed.
+#' All possible combinations of \code{n} parents (i.e. choose(n, 2)) will be simulated.
+#' @param tail.p The proportion of the distribution of genotypic values from which to define the superior progeny mean.
+#' Defaults to 0.1.
+#' @param model The statistical model from which to predict marker effects.
+#' @param map.function The map function to use when converting genetic map distance to recombination rate.
+#'
+#' @details
+#' This functions executes the same predictions as the function \code{\link[PopVar]{pop.predict}}, but uses
+#' the expectation of the genetic variance in a biparental population, as opposed to simulating biparental
+#' populations. The approach using the expectation is about 250 times faster than using simulated biparental population
+#' on the default settings.
 #'
 #' @examples
 #'
+#' # Load example data
+#' data("genos")
+#' data("phenos")
+#' data("map")
+#'
+#' # Create a crossing table
+#' crossing.table <- combn(x = row.names(genos), m = 2) %>%
+#'   t() %>%
+#'   as.data.frame() %>%
+#'   structure(names = c("parent1", "parent2")) %>%
+#'   sample_n(100)
+#'
+#' pp_quick_out <- pop_predict_quick(G.in = genos, y.in = y_use, map.in = map,
+#'                                   crossing.table = crossing.table)
 #'
 #'
 #' @import dplyr
 #' @importFrom qtl sim.cross mf.h mf.k mf.m mf.cf map2table
-#' @importFrom tidyr gather
 #' @importFrom purrr map pmap
-#' @importFrom Matrix bdiag
+#' @importFrom Matrix .bdiag
+#' @importFrom Matrix forceSymmetric
 #'
 #' @export
 #'
-pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.p, model = c("RRBLUP"),
+pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.p = 0.1, model = c("RRBLUP"),
                               map.function = c("haldane", "kosambi", "cf", "morgan")) {
 
   # Check the number of markers in the map and the G.in objects
@@ -46,6 +75,10 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
       unlist() %>%
       unique() %>%
       sort()
+
+    # Make sure the parent names are not factors
+    crossing.table <- crossing.table %>%
+      mutate_all(as.character)
 
   } else {
     if (missing(parents))
@@ -276,7 +309,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
       if (length(traits) > 1) {
 
         # Calculate the genetic covariance
-        trait_covar <- apply(X = (mar_trait_covar_base[mar_seg, mar_seg, ] * par1_mar_seg[,,rep(1, length(trait_combn_names))]),
+        trait_covar <- apply(X = (mar_trait_covar_base[mar_seg, mar_seg, , drop = FALSE] *
+                                    par1_mar_seg[,,rep(1, length(trait_combn_names)), drop = FALSE] ),
                              MARGIN = 3, FUN = sum) / 2
 
         # Iterate over trait combinations

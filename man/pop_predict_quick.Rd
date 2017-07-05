@@ -4,26 +4,35 @@
 \alias{pop_predict_quick}
 \title{Quicker procedures for PopVar}
 \usage{
-pop_predict_quick(G.in, y.in, map.in, crossing.table, parents, tail.p,
+pop_predict_quick(G.in, y.in, map.in, crossing.table, parents, tail.p = 0.1,
   model = c("RRBLUP"), map.function = c("haldane", "kosambi", "cf",
   "morgan"))
 }
 \arguments{
-\item{G.in}{TBD}
+\item{G.in}{A \code{n} x \code{m} matrix of genetic marker information. Must be coded at \code{z = {-1, 0, 1}},
+where \code{1} is homozygous for the first allele, \code{-1} is homozygous for the second allele, and \code{0} is
+heterozygous.}
 
-\item{y.in}{TBD}
+\item{y.in}{A \code{data.frame} of entry names and phenotypic value. The first column must be the entry name,
+and subsequent columns must contain phenotypic values. Column names must be the names of the traits.}
 
-\item{map.in}{TBD}
+\item{map.in}{A \code{data.frame} of genetic map information for the markers in \code{G.in}. The same number
+of markers must be present in \code{map.in} as in \code{G.in}. The first column must be the marker name, the second
+column must be the chromosome, and the third column must be the genetic map position (in cM).}
 
-\item{crossing.table}{TBD}
+\item{crossing.table}{A \code{data.frame} of parental combinations from which to simulate biparental population.
+The first column must be parent 1, and the second column must be parent 2. All entries in \code{crossing.table}
+must have genotypic information in \code{G.in}.}
 
-\item{parents}{TBD}
+\item{parents}{If \code{crossing.table} is not passed, a vector of entry names to serve as parents must be passed.
+All possible combinations of \code{n} parents (i.e. choose(n, 2)) will be simulated.}
 
-\item{tail.p}{TBD}
+\item{tail.p}{The proportion of the distribution of genotypic values from which to define the superior progeny mean.
+Defaults to 0.1.}
 
-\item{model}{TBD}
+\item{model}{The statistical model from which to predict marker effects.}
 
-\item{map.function}{TBD}
+\item{map.function}{The map function to use when converting genetic map distance to recombination rate.}
 }
 \description{
 Calculates the expected mean, genetic variance, and superior progeny mean of a bi-parental population
@@ -31,6 +40,20 @@ based on genomewide marker effects.
 }
 \examples{
 
+# Load example data
+data("genos")
+data("phenos")
+data("map")
+
+# Create a crossing table
+crossing.table <- combn(x = row.names(genos), m = 2) \%>\%
+  t() \%>\%
+  as.data.frame() \%>\%
+  structure(names = c("parent1", "parent2")) \%>\%
+  sample_n(100)
+
+pp_quick_out <- pop_predict_quick(G.in = genos, y.in = y_use, map.in = map,
+                                  crossing.table = crossing.table)
 
 
 }
