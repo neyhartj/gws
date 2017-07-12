@@ -119,14 +119,18 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
   if (model == "RRBLUP") {
 
-    mar_eff_mat <- y.in_use[,-1,drop = FALSE] %>%
+    out_list <- y.in_use[,-1,drop = FALSE] %>%
       apply(MARGIN = 2, FUN = function(y) {
 
         solve_out <- mixed.solve(y = y, Z = G.in_pred, method = "REML")
 
         # Return marker effects
-        as.matrix(solve_out$u) }) %>%
-      structure(dimnames = list(marker_names, traits))
+        list(as.matrix(solve_out$u), solve_out$beta) })
+
+    mar_eff_mat <- do.call("cbind", lapply(out_list, "[[", 1)) %>%
+      structure(dimnames = list(row.names(.), names(out_list)))
+    mar_beta_mat <- do.call("cbind", lapply(out_list, "[[", 2)) %>%
+      structure(dimnames = list(row.names(.), names(out_list)))
 
   } else {
     stop("Other models not supported.")
@@ -137,6 +141,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
   parent_pgv <- mar_eff_mat %>%
     apply(MARGIN = 2, FUN = function(u) G.in_parent %*% u ) %>%
+    {. + matrix(mar_beta_mat, nrow = nrow(.), ncol = 2, byrow = TRUE)} %>%
     data.frame(entry = parents, ., stringsAsFactors = FALSE)
 
 
@@ -172,9 +177,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
              kosambi = qtl::mf.k(chr_dist),
              cf = qtl::mf.cf(chr_dist),
              morgan = qtl::mf.m(chr_dist)) ) %>%
-    map(function(c_ij) ((1 - (2 * c_ij)) / (1 + (2 * c_ij))) ) %>%
-    # Change diagonals to 0
-    map(`diag<-`, 0)
+    map(function(c_ij) ((1 - (2 * c_ij)) / (1 + (2 * c_ij))) )
 
   # Calculate the pairwise product of all marker effects
   # Split by chromosome
@@ -203,7 +206,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
   trait_cov <- pairwise_eff_prod1 %>%
     map(function(u) pmap(list(u, pairwise_D), `*`) ) %>%
     map(.bdiag) %>%
-    map(`dimnames<-`, list(marker_names, marker_names))
+    map(`dimnames<-`, list(marker_names, marker_names)) %>%
+    map(`diag<-`, 0)
 
   # Convert to array
   for (k in seq_along(trait_cov)) {
@@ -284,7 +288,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
         array(dim = c(dim(.), 1))
 
       # Subset the variance df for those markers
-      mar_var <- apply(X = mar_var_base[mar_seg,,, drop = FALSE], MARGIN = 2, FUN = sum)
+      mar_var <- apply(X = mar_var_base[mar_seg,,, drop = FALSE], MARGIN = 3, FUN = sum)
 
       # Subset the covariance and multiply by the parent 1 genotypes
       # Sum then divide by 2 to get the covariance
@@ -311,7 +315,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
         # Calculate the genetic covariance
         trait_covar <- apply(X = (mar_trait_covar_base[mar_seg, mar_seg, , drop = FALSE] *
                                     par1_mar_seg[,,rep(1, length(trait_combn_names)), drop = FALSE] ),
-                             MARGIN = 3, FUN = sum) / 2
+                             MARGIN = 3, FUN = sum)
 
         # Iterate over trait combinations
         pred_cor <- apply(X = trait_combn, MARGIN = 2, FUN = function(trs) {
@@ -342,8 +346,8 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
   # Calculate superior progeny means
   predictions %>%
-    mutate(pred_mu_sp_high = pred_mu + (k_sp * pred_varG),
-           pred_mu_sp_low = pred_mu - (k_sp * pred_varG)) %>%
+    mutate(pred_mu_sp_high = pred_mu + (k_sp * sqrt(pred_varG)),
+           pred_mu_sp_low = pred_mu - (k_sp * sqrt(pred_varG))) %>%
     select(1, 2, trait, pred_mu, pred_varG, pred_mu_sp_high, pred_mu_sp_low, names(.))
 
 } # Close the function

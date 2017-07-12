@@ -38,6 +38,12 @@ Defaults to 0.1.}
 Calculates the expected mean, genetic variance, and superior progeny mean of a bi-parental population
 based on genomewide marker effects.
 }
+\details{
+This functions executes the same predictions as the function \code{\link[PopVar]{pop.predict}}, but uses
+the expectation of the genetic variance in a biparental population, as opposed to simulating biparental
+populations. The approach using the expectation is about 250 times faster than using simulated biparental population
+on the default settings.
+}
 \examples{
 
 # Load example data
