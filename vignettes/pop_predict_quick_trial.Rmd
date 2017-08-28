@@ -1,0 +1,95 @@
+---
+title: "Testing Expectation Versus `PopVar`"
+author: "Jeff Neyhart"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+## Introduction
+
+Here we compare the expectation of genetic variance and genetic correlation versus the predictions provided by the `PopVar` package.
+
+
+```{r setup}
+
+# Load libraries
+library(tidyverse)
+library(stringr)
+library(reshape2)
+library(PopVar)
+library(gws)
+
+# Load data
+data("genos")
+data("phenos")
+data("map")
+
+
+```
+
+
+
+## Predict Genetic Correlation
+
+Select 100 crosses and run predictions
+
+
+```{r gen.corr}
+
+# Create a crossing table
+crossing.table <- combn(x = row.names(genos), m = 2) %>%
+  t() %>%
+  as.data.frame() %>%
+  structure(names = c("parent1", "parent2")) %>%
+  sample_n(1000)
+
+# Run expectation predictions
+expected_pred_out <- pop_predict_quick(G.in = genos, y.in = phenos, crossing.table = crossing.table, map.in = map)
+
+# Run PopVar predictions
+G_in <- as.data.frame(cbind( c("", row.names(genos)), rbind(colnames(genos), genos)) )
+
+
+popvar_pred_out <- pop.predict(G.in = G_in, y.in = phenos, map.in = map, crossing.table = crossing.table, 
+                               nInd = 100, min.maf = 0, mkr.cutoff = 1, entry.cutoff = 1, remove.dups = FALSE,
+                               impute = "pass", nSim = 15, nCV.iter = 0, models = "rrBLUP")
+
+# Combine
+popvar_pred_out_df <- popvar_pred_out$predictions %>% 
+              map(as_data_frame) %>% 
+              map(function(df) mutate_all(df, unlist)) %>% 
+              melt() %>% 
+              mutate(trait = str_replace(L1, "_param.df", "")) %>% 
+              select(parent1 = Par1, parent2 = Par2, trait, variable, value) %>% 
+              spread(variable, value)
+
+# Compare variance
+full_join(expected_pred_out, popvar_pred_out_df) %>%
+  group_by(trait) %>%
+  summarize(pred_mu_cor = cor(pred_mu, pred.mu),
+            pred_varG_cor = cor(pred_varG, pred.varG),
+            pred_mu_sp_cor = cor(pred_mu_sp_high, mu.sp_high))
+
+# Compare genetic correlation
+full_join(expected_pred_out, popvar_pred_out_df) %>% 
+  group_by(trait) %>% 
+  do({
+    
+    exp_mat <- select(., FHB, DON, Yield, Height) %>% 
+      as.matrix()
+    popvar_mat <- select(., `cor_w/_FHB`, starts_with("cor")) %>% 
+      as.matrix() 
+    
+    as_data_frame(cor(exp_mat, popvar_mat)) })
+    
+    
+
+```
+
+
+
+

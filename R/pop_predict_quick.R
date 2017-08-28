@@ -31,6 +31,7 @@
 #' @examples
 #'
 #' # Load example data
+#' library(dplyr)
 #' data("genos")
 #' data("phenos")
 #' data("map")
@@ -42,11 +43,14 @@
 #'   structure(names = c("parent1", "parent2")) %>%
 #'   sample_n(100)
 #'
-#' pp_quick_out <- pop_predict_quick(G.in = genos, y.in = y_use, map.in = map,
+#'
+#' pp_quick_out <- pop_predict_quick(G.in = genos, y.in = phenos, map.in = map,
 #'                                   crossing.table = crossing.table)
 #'
 #'
+#'
 #' @import dplyr
+#' @importFrom tidyr unnest
 #' @importFrom qtl sim.cross mf.h mf.k mf.m mf.cf map2table
 #' @importFrom purrr map pmap
 #' @importFrom Matrix .bdiag
@@ -141,7 +145,7 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
   parent_pgv <- mar_eff_mat %>%
     apply(MARGIN = 2, FUN = function(u) G.in_parent %*% u ) %>%
-    {. + matrix(mar_beta_mat, nrow = nrow(.), ncol = 2, byrow = TRUE)} %>%
+    {. + matrix(mar_beta_mat, nrow = nrow(.), ncol = length(traits), byrow = TRUE)} %>%
     data.frame(entry = parents, ., stringsAsFactors = FALSE)
 
 
@@ -272,9 +276,12 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
 
 
   # Iterate over the parents in the crossing block
-  predictions <- by_row(crossing.table, function(pars) {
+  predictions <- crossing.table %>%
+    rowwise() %>%
+    do(out = {
 
-      pars <- as.character(pars)
+      pars <- as.character(c(.$parent1, .$parent2))
+
 
       # Extract parental genotypes
       par_geno <- G.in_parent[pars, , drop = FALSE]
@@ -341,11 +348,13 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
       }
 
       # Return the results
-      return(results1) }, .collate = "rows") %>%
-    select(-`.row`)
+      results1 })
 
+  # Combine with original crossing.table
   # Calculate superior progeny means
-  predictions %>%
+  bind_cols(crossing.table, predictions) %>%
+    as_data_frame() %>%
+    unnest() %>%
     mutate(pred_mu_sp_high = pred_mu + (k_sp * sqrt(pred_varG)),
            pred_mu_sp_low = pred_mu - (k_sp * sqrt(pred_varG))) %>%
     select(1, 2, trait, pred_mu, pred_varG, pred_mu_sp_high, pred_mu_sp_low, names(.))

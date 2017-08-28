@@ -47,6 +47,7 @@ on the default settings.
 \examples{
 
 # Load example data
+library(dplyr)
 data("genos")
 data("phenos")
 data("map")
@@ -58,8 +59,10 @@ crossing.table <- combn(x = row.names(genos), m = 2) \%>\%
   structure(names = c("parent1", "parent2")) \%>\%
   sample_n(100)
 
-pp_quick_out <- pop_predict_quick(G.in = genos, y.in = y_use, map.in = map,
+
+pp_quick_out <- pop_predict_quick(G.in = genos, y.in = phenos, map.in = map,
                                   crossing.table = crossing.table)
+
 
 
 }
