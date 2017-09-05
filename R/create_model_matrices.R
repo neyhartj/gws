@@ -97,7 +97,9 @@ ranef_model_matrix <- function(random, data, vcov) {
       sec_var <- str_split(string = term, pattern = ":") %>%
         unlist() %>%
         tail(-1) %>%
-        paste(collapse = "|")
+        paste(collapse = "|") %>%
+        str_replace_all(pattern = "g\\(", "g\\\\(") %>%
+        str_replace_all(pattern = "\\)", "\\\\)")
 
       # Pull out the levels of that variable
       at_var_levels <- levels(data[[at_var]])
@@ -106,6 +108,7 @@ ranef_model_matrix <- function(random, data, vcov) {
       for (lev in at_var_levels) {
         # Subset the matrix
         mat <- model_matrix[,str_detect(string = colnames(model_matrix), pattern = lev)]
+
         # Adjust the columnnames
         colnames(mat) <- colnames(mat) %>%
           str_replace_all(pattern = lev, replacement = "") %>%
@@ -115,14 +118,12 @@ ranef_model_matrix <- function(random, data, vcov) {
         # Determine a list name
         lev_list_name <- str_replace(string = term, pattern = at_var, replacement = lev)
 
-
-
         # If the term has a specified covariance matrix, figure out what term it is
         if (is_g) {
           # Is the 'g' at the beginning of the term?
           is_start_g <- str_detect(string = term, pattern = "^g")
 
-          g_term <- str_extract(string = term, pattern = "g\\([A-Za-z0-9]*\\)") %>%
+          g_term <- str_extract(string = term, pattern = "g\\(.*\\)") %>%
             str_replace_all(pattern = "g\\(|\\)", replacement = "")
 
           # Is the name in the vcov list?
@@ -275,7 +276,7 @@ resid_model_matrix <- function(resid, data) {
 
   # Detect "units" variable in the model and in the specific format
   detect_format <- str_detect(string = as.character(resid)[2],
-                              pattern = "at\\([A-Za-z0-9]*\\):units|units")
+                              pattern = "at\\(.*\\):units|units")
 
   if (!detect_format) {
     stop("The 'resid' formula must take the form 'resid = ~ units' or 'resid = ~ at(.):units'.")
@@ -328,16 +329,18 @@ resid_model_matrix <- function(resid, data) {
 
         # For each level, subset the model_matrix
         for (lev in at_var_levels) {
-          # Subset the matrix
-          mat <- model_matrix[,str_detect(string = colnames(model_matrix), pattern = lev), drop = FALSE]
-          # Create an identity matrix
-          R <- diag(sum(mat))
+          # Subset the matrix - this will become the diagonal of the matrix
+          diag_mat <- model_matrix[,str_detect(string = colnames(model_matrix), pattern = lev)]
+
+          # Create an empty matrix
+          mat <- matrix(data = 0, nrow = length(diag_mat), ncol = length(diag_mat))
+          diag(mat) <- diag_mat
 
           # Determine a list name
           lev_list_name <- str_replace(string = term, pattern = at_var, replacement = lev)
 
           # Add to the list
-          R_list[[lev_list_name]] <- R
+          R_list[[lev_list_name]] <- mat
 
         }
       }
