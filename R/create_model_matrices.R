@@ -157,7 +157,8 @@ ranef_model_matrix <- function(random, data, vcov) {
         # Is the 'g' at the beginning of the term?
         is_start_g <- str_detect(string = term, pattern = "^g")
 
-        g_term <- str_extract(string = term, pattern = "g\\([A-Za-z0-9]*\\)") %>%
+        # The line '.*' matches all strings.
+        g_term <- str_extract(string = term, pattern = "g\\(.*\\)") %>%
           str_replace_all(pattern = "g\\(|\\)", replacement = "")
 
         # Is the name in the vcov list?
@@ -181,7 +182,7 @@ ranef_model_matrix <- function(random, data, vcov) {
       # Remove the variable name from the matrix column names
       if (is_start_g) {
         colnames(model_matrix) <- colnames(model_matrix) %>%
-          str_replace_all(pattern = "g\\([A-Za-z0-9]*\\)", replacement = "")
+          str_replace_all(pattern = "g\\(.*\\)", replacement = "")
 
       } else {
         colnames(model_matrix) <- colnames(model_matrix) %>%
