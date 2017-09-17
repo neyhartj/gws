@@ -39,7 +39,8 @@ ranef_model_matrix <- function(random, data, vcov) {
 
   } else {
     # Convert data to a data.frame
-    data <- as.data.frame(data)
+    data <- as.data.frame(data) %>%
+      mutate_if(is.character, as.factor)
 
   }
 
@@ -270,7 +271,8 @@ resid_model_matrix <- function(resid, data) {
 
   } else {
     # Convert data to a data.frame
-    data <- as.data.frame(data)
+    data <- as.data.frame(data) %>%
+      mutate_if(is.character, as.factor)
 
   }
 
