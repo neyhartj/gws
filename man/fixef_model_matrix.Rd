@@ -4,7 +4,7 @@
 \alias{fixef_model_matrix}
 \title{Create a fixed effect incidence matrix}
 \usage{
-fixef_model_matrix(fixed, data)
+fixef_model_matrix(fixed, data, sparse = TRUE)
 }
 \arguments{
 \item{fixed}{A \code{formula} specifying the the response variable and the

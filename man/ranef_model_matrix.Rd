@@ -4,7 +4,7 @@
 \alias{ranef_model_matrix}
 \title{Create a random effect incidence matrix}
 \usage{
-ranef_model_matrix(random, data, vcov)
+ranef_model_matrix(random, data, vcov, sparse = TRUE)
 }
 \arguments{
 \item{random}{A \code{formula} specifying the the random effect terms of the

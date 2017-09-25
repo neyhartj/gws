@@ -24,10 +24,11 @@
 #' @import dplyr
 #' @import stringr
 #' @importFrom sommer at g us and
+#' @importFrom Matrix sparse.model.matrix Diagonal
 #'
 #' @export
 #'
-ranef_model_matrix <- function(random, data, vcov) {
+ranef_model_matrix <- function(random, data, vcov, sparse = TRUE) {
 
   # Input check
   if (!inherits(random, "formula"))
@@ -87,7 +88,11 @@ ranef_model_matrix <- function(random, data, vcov) {
     term_formula <- as.formula(paste("~ -1 +", term))
 
     # Pull out the model matrix
-    model_matrix <- model.matrix(object = term_formula, data = model_frame_base)
+    if (sparse) {
+      model_matrix <- sparse.model.matrix(object = term_formula, data = model_frame_base)
+    } else {
+      model_matrix <- model.matrix(object = term_formula, data = model_frame_base)
+    }
 
     # Find the regressor that with the modifier
     if (is_at) {
@@ -110,11 +115,12 @@ ranef_model_matrix <- function(random, data, vcov) {
         # Subset the matrix
         mat <- model_matrix[,str_detect(string = colnames(model_matrix), pattern = lev)]
 
+        sec_var_levs <- colnames(mat) %>%
+          str_split(pattern = ":") %>%
+          sapply("[", 2) %>% str_replace_all(sec_var, "")
+
         # Adjust the columnnames
-        colnames(mat) <- colnames(mat) %>%
-          str_replace_all(pattern = lev, replacement = "") %>%
-          str_replace_all(pattern = at_var, replacement = lev) %>%
-          str_replace_all(pattern = sec_var, replacement = "")
+        colnames(mat) <- str_c("at(", lev, "):", sec_var_levs)
 
         # Determine a list name
         lev_list_name <- str_replace(string = term, pattern = at_var, replacement = lev)
@@ -141,8 +147,14 @@ ranef_model_matrix <- function(random, data, vcov) {
         } else {
           is_start_g <- FALSE
 
-          vcov_term <- diag(ncol(mat)) %>%
-            structure(dimnames = list(colnames(mat), colnames(mat)))
+          if (sparse) {
+            vcov_term <- Diagonal(n = ncol(mat))
+
+          } else {
+            vcov_term <- diag(ncol(mat))
+          }
+
+          dimnames(vcov_term) <- list(colnames(mat), colnames(mat))
 
         }
 
@@ -176,8 +188,14 @@ ranef_model_matrix <- function(random, data, vcov) {
       } else {
         is_start_g <- FALSE
 
-        vcov_term <- diag(ncol(model_matrix)) %>%
-          structure(dimnames = list(colnames(model_matrix), colnames(model_matrix)))
+        if (sparse) {
+          vcov_term <- Diagonal(n = ncol(model_matrix))
+
+        } else {
+          vcov_term <- diag(ncol(model_matrix))
+        }
+
+        dimnames(vcov_term) <- list(colnames(model_matrix), colnames(model_matrix))
 
       }
 
@@ -223,14 +241,20 @@ ranef_model_matrix <- function(random, data, vcov) {
 #' predictors. If not supplied, the function will look in the current running
 #' environment.
 #'
+#' @importFrom Matrix sparse.model.matrix
+#'
 #' @return
 #' A model matrix.
 #'
 #' @export
 #'
-fixef_model_matrix <- function(fixed, data) {
+fixef_model_matrix <- function(fixed, data, sparse = TRUE) {
 
-  model.matrix(fixed, data = data)
+  if (sparse) {
+    sparse.model.matrix(object = fixed, data = data)
+  } else {
+    model.matrix(object = fixed, data = data)
+  }
 
 } # Close the function
 
@@ -256,10 +280,11 @@ fixef_model_matrix <- function(fixed, data) {
 #' @import dplyr
 #' @import stringr
 #' @importFrom sommer at g us and
+#' @importFrom Matrix sparse.model.matrix
 #'
 #' @export
 #'
-resid_model_matrix <- function(resid, data) {
+resid_model_matrix <- function(resid, data, sparse = TRUE) {
 
   # Input check
   if (!inherits(resid, "formula"))
@@ -297,7 +322,13 @@ resid_model_matrix <- function(resid, data) {
 
   # If the model_frame is dimensionless (i.e. resid = ~ units), return the R list
   if (ncol(model_frame_base) == 0) {
-    return(list(units = diag(nrow(model_frame_base))))
+    if (sparse) {
+      return(list(units = Diagonal(nrow(model_frame_base))))
+    } else {
+      return(list(units = diag(nrow(model_frame_base))))
+    }
+
+
 
   } else {
     # Otherwise create a list of R matrices
@@ -318,8 +349,11 @@ resid_model_matrix <- function(resid, data) {
       # Create a formula for that specific term
       term_formula <- as.formula(paste("~ -1 +", term))
 
-      # Pull out the model matrix
-      model_matrix <- model.matrix(object = term_formula, data = model_frame_base)
+      if (sparse) {
+        model_matrix <- sparse.model.matrix(object = term_formula, data = model_frame_base)
+      } else {
+        model_matrix <- model.matrix(object = term_formula, data = model_frame_base)
+      }
 
       # Find the regressor that with the modifier
       if (is_at) {

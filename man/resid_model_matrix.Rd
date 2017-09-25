@@ -4,7 +4,7 @@
 \alias{resid_model_matrix}
 \title{Create a residual effect covariance matrix}
 \usage{
-resid_model_matrix(resid, data)
+resid_model_matrix(resid, data, sparse = TRUE)
 }
 \arguments{
 \item{resid}{A \code{formula} specifying the the structure of the residual
