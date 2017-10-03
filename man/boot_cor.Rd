@@ -4,14 +4,14 @@
 \alias{boot_cor}
 \title{Bootstrap a correlation}
 \usage{
-boot_cor(x, y, boot.reps, prob = 0.95)
+boot_cor(x, y, boot.reps = 1000, alpha = 0.05)
 }
 \arguments{
 \item{boot.reps}{An integer of how many bootstrapping replications to perform.}
 
-\item{prob}{A floating point that specifies the percentile confidence interval to report from bootstrapping. Default is 0.95.}
-
 \item{data}{A two-column matrix of data to correlate}
+
+\item{prob}{A floating point that specifies the percentile confidence interval to report from bootstrapping. Default is 0.95.}
 }
 \value{
 A list containing the correlation coefficient (r), the standard deviation of bootstrapping correlation coefficients (r.sd.hat), and the confidence interval surrounding the mean (CI)
@@ -21,6 +21,6 @@ Bootstrap a correlation
 }
 \examples{
 data <- replicate(2, rnorm(100))
-boot.cor(data = data, boot.reps = 1000)
+boot_cor(x = data[,1], y = data[,2], boot.reps = 1000)
 
 }
