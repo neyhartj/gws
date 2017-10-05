@@ -3,6 +3,7 @@
 #' @param data A two-column matrix of data to correlate
 #' @param boot.reps An integer of how many bootstrapping replications to perform.
 #' @param prob A floating point that specifies the percentile confidence interval to report from bootstrapping. Default is 0.95.
+#'
 #' @return A list containing the correlation coefficient (r), the standard deviation of bootstrapping correlation coefficients (r.sd.hat), and the confidence interval surrounding the mean (CI)
 #'
 #' @examples
@@ -30,20 +31,33 @@ boot_cor <- function(x, y, boot.reps = 1000, alpha = 0.05) {
     return(cor(rep_data[,1], rep_data[,2]))
   }
 
-  # Perform the bootstrapping
-  boot_results <- boot(data = cbind(x, y), statistic = boot.cor, R = boot.reps)
 
-  # Extract the original statistic
-  cor0 <- boot_results$t0
-  # Standard error
-  se <- sd(boot_results$t)
-  # Bias
-  bias <- mean(boot_results$t) - cor0
-  # Confidence interval
-  ci_lower <- (2 * cor0) - quantile(boot_results$t, 1 - (alpha / 2))
-  ci_upper <- (2 * cor0) - quantile(boot_results$t, (alpha / 2))
+  # First calculate the base statistic
+  base_cor <- suppressWarnings(cor(x, y))
+
+  # If the correlation is not NA, proceed
+  if (!is.na(base_cor)) {
+
+    # Perform the bootstrapping
+    boot_results <- boot(data = cbind(x, y), statistic = boot.cor, R = boot.reps)
+
+    # Standard error
+    se <- sd(boot_results$t)
+    # Bias
+    bias <- mean(boot_results$t) - base_cor
+
+
+    # Confidence interval
+    ci_lower <- (2 * base_cor) - quantile(boot_results$t, 1 - (alpha / 2))
+    ci_upper <- (2 * base_cor) - quantile(boot_results$t, (alpha / 2))
+
+  } else {
+
+    se <- bias <- ci_lower <- ci_upper <- NA
+
+  }
 
   # Assemble list and return
-  data.frame(cor = boot_results$t0, se = se, bias = bias,
+  data.frame(cor = base_cor, se = se, bias = bias,
              ci_lower = ci_lower, ci_upper = ci_upper, row.names = NULL)
 }
