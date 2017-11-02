@@ -4,9 +4,15 @@
 #' Calculates the expected mean, genetic variance, and superior progeny mean of a bi-parental population
 #' based on genomewide marker effects.
 #'
-#' @param G.in A \code{n} x \code{m} matrix of genetic marker information. Must be coded at \code{z = {-1, 0, 1}},
-#' where \code{1} is homozygous for the first allele, \code{-1} is homozygous for the second allele, and \code{0} is
-#' heterozygous.
+#' @param pheno A \code{data.frame} of phenotypic data. The first column must contain line/genotype,
+#' and subsequent columns may contain factors to be modeled as fixed (e.g. environment),
+#' or trait values.
+#' @param geno A \code{data.frame} of marker names, positions, and genotypes. The
+#' first column must contain marker names, the second column chromosome,
+#' the third column position, and remaining columns must be the genotype calls for
+#' each line/genotype at the respective marker. Must be coded at \code{z = {-1, 0, 1}},
+#' where \code{1} is homozygous for the first allele, \code{-1} is homozygous for
+#' the second allele, and \code{0} is heterozygous.
 #' @param y.in A \code{data.frame} of entry names and phenotypic value. The first column must be the entry name,
 #' and subsequent columns must contain phenotypic values. Column names must be the names of the traits.
 #' @param map.in A \code{data.frame} of genetic map information for the markers in \code{G.in}. The same number
@@ -356,7 +362,9 @@ pop_predict_quick <- function(G.in, y.in, map.in, crossing.table, parents, tail.
     as_data_frame() %>%
     unnest() %>%
     mutate(pred_mu_sp_high = pred_mu + (k_sp * sqrt(pred_varG)),
-           pred_mu_sp_low = pred_mu - (k_sp * sqrt(pred_varG))) %>%
+           pred_mu_sp_low = pred_mu - (k_sp * sqrt(pred_varG)),
+           var_pred_mu = 0.5 * pred_varG,
+           var_pred_varG = 0.25 * pred_varG) %>%
     select(1, 2, trait, pred_mu, pred_varG, pred_mu_sp_high, pred_mu_sp_low, names(.))
 
 } # Close the function

@@ -9,10 +9,10 @@ ranef_model_matrix(random, data, vcov, sparse = TRUE)
 \arguments{
 \item{random}{A \code{formula} specifying the the random effect terms of the
 linear mixed-model. Must be preceded by a \code{~} and can include the modifier
-verbs \code{\link[at]{sommer}}, \code{\link[us]{sommer}}, and \code{\link[diag]{base}}
+verbs \code{\link{at}[sommer]}, \code{\link{us}[sommer]}, and \code{\link{diag}[base]}
 to specify different structures. If a random effect term has an accompanying
 variance-covariance matrix (see \code{vcov}), the term should be nested using
-the function \code{\link[g]{sommer}}}
+the function \code{\link{g}[sommer]}}
 
 \item{data}{A \code{data.frame} that includes the response and random effect
 predictors. If not supplied, the function will look in the current running

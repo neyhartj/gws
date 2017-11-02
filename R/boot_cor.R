@@ -48,8 +48,8 @@ boot_cor <- function(x, y, boot.reps = 1000, alpha = 0.05) {
 
 
     # Confidence interval
-    ci_lower <- (2 * base_cor) - quantile(boot_results$t, 1 - (alpha / 2))
-    ci_upper <- (2 * base_cor) - quantile(boot_results$t, (alpha / 2))
+    ci_upper <- quantile(boot_results$t, 1 - (alpha / 2))
+    ci_lower <- quantile(boot_results$t, (alpha / 2))
 
   } else {
 

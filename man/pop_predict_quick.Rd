@@ -9,10 +9,6 @@ pop_predict_quick(G.in, y.in, map.in, crossing.table, parents, tail.p = 0.1,
   "morgan"))
 }
 \arguments{
-\item{G.in}{A \code{n} x \code{m} matrix of genetic marker information. Must be coded at \code{z = {-1, 0, 1}},
-where \code{1} is homozygous for the first allele, \code{-1} is homozygous for the second allele, and \code{0} is
-heterozygous.}
-
 \item{y.in}{A \code{data.frame} of entry names and phenotypic value. The first column must be the entry name,
 and subsequent columns must contain phenotypic values. Column names must be the names of the traits.}
 
@@ -33,6 +29,17 @@ Defaults to 0.1.}
 \item{model}{The statistical model from which to predict marker effects.}
 
 \item{map.function}{The map function to use when converting genetic map distance to recombination rate.}
+
+\item{pheno}{A \code{data.frame} of phenotypic data. The first column must contain line/genotype,
+and subsequent columns may contain factors to be modeled as fixed (e.g. environment),
+or trait values.}
+
+\item{geno}{A \code{data.frame} of marker names, positions, and genotypes. The
+first column must contain marker names, the second column chromosome,
+the third column position, and remaining columns must be the genotype calls for
+each line/genotype at the respective marker. Must be coded at \code{z = {-1, 0, 1}},
+where \code{1} is homozygous for the first allele, \code{-1} is homozygous for
+the second allele, and \code{0} is heterozygous.}
 }
 \description{
 Calculates the expected mean, genetic variance, and superior progeny mean of a bi-parental population
