@@ -43,8 +43,7 @@ filter_genos <- function(genos, min.maf = 0, max.mar.missing = 1,
                          print.plot = FALSE, verbose = TRUE) {
 
   # Separate the input
-  genos.components <- genos %>%
-    gws:::convert_hapmap()
+  genos.components <- convert_hapmap(genos)
 
   # Separate
   genos.mat <- genos.components$marker.genos

@@ -23,7 +23,7 @@
 #'
 #' @import dplyr
 #' @import stringr
-#' @importFrom sommer at g us and
+#' @import sommer
 #' @importFrom Matrix sparse.model.matrix Diagonal
 #'
 #' @export
@@ -279,7 +279,7 @@ fixef_model_matrix <- function(fixed, data, sparse = TRUE) {
 #'
 #' @import dplyr
 #' @import stringr
-#' @importFrom sommer at g us and
+#' @import sommer
 #' @importFrom Matrix sparse.model.matrix
 #'
 #' @export
