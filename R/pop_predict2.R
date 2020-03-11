@@ -733,71 +733,80 @@ pop_predict2 <- function(M, y.in, marker.effects, map.in, crossing.table, tail.p
 
     # Character vector of the two parents
     pars <- as.character(crossing.table[j,1:2])
+    # Cross mean prediction
+    pred_mu_j <- colMeans(pgvs[pars,,drop = FALSE])
+    # Genetic variance - use the pred_mu_j vector as a template
+    pred_varG_j <- pred_mu_j
 
     ## Subset the genotype matrix using the parents
     par_geno <- M[pars,,drop = FALSE]
 
     # Which markers are segregating?
     mar_seg <- names(which(colMeans(par_geno) == 0))
-    # Split by chromsome
-    mar_seg_chr <- lapply(markers_chr, intersect, mar_seg)
-
-    # Find the parent 1 genotype of those markers and take the crossproduct for multiplication
-    par1_mar_seg <- crossprod(par_geno[1,mar_seg, drop = FALSE])
-    # Split by chromosome
-    par1_mar_seg_chr <- lapply(mar_seg_chr, function(marks) par1_mar_seg[marks, marks])
-
-
-    ## Predictions
-    # Cross mean
-    pred_mu_j <- colMeans(pgvs[pars,,drop = FALSE])
-
-    # Genetic variance - use the pred_mu_j vector as a template
-    pred_varG_j <- pred_mu_j
-
-    # Iterate over traits
-    # Note that the QTL covariance matrix includes the variance of each QTL on the diagonal, so the sum of the matrix
-    # is the variance + 2 * covariance
-    for (i in seq(n_traits)) {
-      pred_varG_j[i] <- sum(mapply(par1_mar_seg_chr, intra_trait_covar[[i]], FUN = function(x, y) sum(x * y[colnames(x), colnames(x)])))
-    }
-
-
-    # Genetic correlations between traits, if more than one trait
-    if (!is.null(inter_trait_covar)) {
-
-      ## Iterate over trait combinations
-      for (i in seq_along(inter_trait_covar)) {
-
-        ## Calculate the covariance between the pair of traits
-        trait_pair_cov <- sum(mapply(par1_mar_seg_chr, inter_trait_covar[[i]], FUN = function(x, y) sum(x * y[colnames(x), colnames(x)])))
-
-        # Subset predicted variance
-        trait_pair_varG <- pred_varG_j[trait_ind_combn[i,]]
-
-        # Calculate correlation and save
-        trait_corG_dist[i] <- trait_pair_cov / prod(sqrt(trait_pair_varG))
-
-      }
-
-      ## Convert distance object to matrix
-      pred_corG_mat <- as.matrix(trait_corG_dist)
-      dimnames(pred_corG_mat) <- dimnames(trait_corG_mat)
-      diag(pred_corG_mat) <- NA
-
-      ## Calculate correlated progeny mean
-      response_trait_varG <- matrix(pred_varG_j, nrow = length(pred_varG_j), ncol = length(pred_varG_j), byrow = TRUE)
-      correlated_response <- k_sp * pred_corG_mat * sqrt(response_trait_varG)
-      pred_mu_j_mat <- matrix(pred_mu_j, nrow = length(pred_mu_j), ncol = length(pred_mu_j), byrow = TRUE)
-      pred_cor_musp_low <- pred_mu_j_mat - correlated_response
-      pred_cor_musp_high <- pred_mu_j_mat + correlated_response
-
-      # Change names
-      colnames(pred_cor_musp_low) <- paste0("pred_cor_musp_low_", trait_names)
-      colnames(pred_cor_musp_high) <- paste0("pred_cor_musp_high_", trait_names)
+    # If no markers are segregating, the variance is 0
+    if (length(mar_seg) == 0) {
+      pred_varG_j[] <- 0
+      pred_corG_mat <- if (n_traits > 1) trait_corG_mat else NULL
+      pred_cor_musp_low <- pred_cor_musp_high <- if (n_traits > 1) pred_mu_j else NULL
 
     } else {
-      pred_corG_mat <- pred_cor_musp_low <- pred_cor_musp_high <- NULL
+
+      # Split by chromsome
+      mar_seg_chr <- lapply(markers_chr, intersect, mar_seg)
+
+      # Find the parent 1 genotype of those markers and take the crossproduct for multiplication
+      par1_mar_seg <- crossprod(par_geno[1,mar_seg, drop = FALSE])
+      # Split by chromosome
+      par1_mar_seg_chr <- lapply(mar_seg_chr, function(marks) par1_mar_seg[marks, marks])
+
+
+      ## Predictions
+
+      # Iterate over traits
+      # Note that the QTL covariance matrix includes the variance of each QTL on the diagonal, so the sum of the matrix
+      # is the variance + 2 * covariance
+      for (i in seq(n_traits)) {
+        pred_varG_j[i] <- sum(mapply(par1_mar_seg_chr, intra_trait_covar[[i]], FUN = function(x, y) sum(x * y[colnames(x), colnames(x)])))
+      }
+
+
+      # Genetic correlations between traits, if more than one trait
+      if (!is.null(inter_trait_covar)) {
+
+        ## Iterate over trait combinations
+        for (i in seq_along(inter_trait_covar)) {
+
+          ## Calculate the covariance between the pair of traits
+          trait_pair_cov <- sum(mapply(par1_mar_seg_chr, inter_trait_covar[[i]], FUN = function(x, y) sum(x * y[colnames(x), colnames(x)])))
+
+          # Subset predicted variance
+          trait_pair_varG <- pred_varG_j[trait_ind_combn[i,]]
+
+          # Calculate correlation and save
+          trait_corG_dist[i] <- trait_pair_cov / prod(sqrt(trait_pair_varG))
+
+        }
+
+        ## Convert distance object to matrix
+        pred_corG_mat <- as.matrix(trait_corG_dist)
+        dimnames(pred_corG_mat) <- dimnames(trait_corG_mat)
+        diag(pred_corG_mat) <- NA
+
+        ## Calculate correlated progeny mean
+        response_trait_varG <- matrix(pred_varG_j, nrow = length(pred_varG_j), ncol = length(pred_varG_j), byrow = TRUE)
+        correlated_response <- k_sp * pred_corG_mat * sqrt(response_trait_varG)
+        pred_mu_j_mat <- matrix(pred_mu_j, nrow = length(pred_mu_j), ncol = length(pred_mu_j), byrow = TRUE)
+        pred_cor_musp_low <- pred_mu_j_mat - correlated_response
+        pred_cor_musp_high <- pred_mu_j_mat + correlated_response
+
+        # Change names
+        colnames(pred_cor_musp_low) <- paste0("pred_cor_musp_low_", trait_names)
+        colnames(pred_cor_musp_high) <- paste0("pred_cor_musp_high_", trait_names)
+
+      } else {
+        pred_corG_mat <- pred_cor_musp_low <- pred_cor_musp_high <- NULL
+
+      }
 
     }
 

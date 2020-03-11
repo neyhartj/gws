@@ -21,12 +21,6 @@
 #' random effect term, the incidence matrix \code{Z} is returned along with its
 #' accompanying variance-covariance matrix \code{K}.
 #'
-#' @import dplyr
-#' @import stringr
-#' @importFrom sommer at g us and
-#' @importFrom Matrix sparse.model.matrix Diagonal
-#'
-#' @export
 #'
 ranef_model_matrix <- function(random, data, vcov, sparse = TRUE) {
 
@@ -241,12 +235,6 @@ ranef_model_matrix <- function(random, data, vcov, sparse = TRUE) {
 #' predictors. If not supplied, the function will look in the current running
 #' environment.
 #'
-#' @importFrom Matrix sparse.model.matrix
-#'
-#' @return
-#' A model matrix.
-#'
-#' @export
 #'
 fixef_model_matrix <- function(fixed, data, sparse = TRUE) {
 
@@ -276,13 +264,6 @@ fixef_model_matrix <- function(fixed, data, sparse = TRUE) {
 #'
 #' @return
 #' A nested list of model matrices.
-#'
-#' @import dplyr
-#' @import stringr
-#' @importFrom sommer at g us and
-#' @importFrom Matrix sparse.model.matrix
-#'
-#' @export
 #'
 resid_model_matrix <- function(resid, data, sparse = TRUE) {
 
