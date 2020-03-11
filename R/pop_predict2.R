@@ -431,11 +431,8 @@ pop.predict2 <- function(G.in, y.in, map.in, crossing.table, parents, tail.p = 0
 #'           dimnames = list(NULL, paste0("parent", 1:2))),
 #'    stringsAsFactors = FALSE)
 #'
-#' # Format the genotype data
-#' G_in <- as.data.frame(cbind( c("", row.names(genos)), rbind(colnames(genos), genos)) )
-#'
 #' # Run predictions
-#' pred_out <- pop.predict2(G.in = G_in, y.in = phenos, map.in = map,
+#' pred_out <- pop_predict2(M = genos, y.in = phenos, map.in = map,
 #'                          crossing.table = crosses)
 #'
 #'
@@ -621,6 +618,8 @@ pop_predict2 <- function(M, y.in, marker.effects, map.in, crossing.table, tail.p
 
   }
 
+  # Reorder markers
+  M1 <- M[, markers_mapin, drop = FALSE]
 
   ## Create an empty matrix
   marker_names <- markers_mapin
@@ -669,7 +668,6 @@ pop_predict2 <- function(M, y.in, marker.effects, map.in, crossing.table, tail.p
 
   ## Predicted genotypic value of all genotypes + grand mean
   pgvs <- (M %*% mar_eff_mat) + matrix(mar_beta_mat, ncol = ncol(mar_eff_mat), nrow = nrow(M), byrow = TRUE)
-  row.names(pgvs) <- y.in_use[[1]]
 
 
   ## Calculate the pairwise product of marker effects for each trait, separated by chromosome

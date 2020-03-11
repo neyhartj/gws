@@ -101,11 +101,8 @@ crosses <- as.data.frame(
           dimnames = list(NULL, paste0("parent", 1:2))),
    stringsAsFactors = FALSE)
 
-# Format the genotype data
-G_in <- as.data.frame(cbind( c("", row.names(genos)), rbind(colnames(genos), genos)) )
-
 # Run predictions
-pred_out <- pop.predict2(G.in = G_in, y.in = phenos, map.in = map,
+pred_out <- pop_predict2(M = genos, y.in = phenos, map.in = map,
                          crossing.table = crosses)
 
 
