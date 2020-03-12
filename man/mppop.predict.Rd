@@ -105,15 +105,25 @@ data("phenos")
 data("genos")
 data("map")
 
-# Create 10, 4-way parent combinations
+# Create 25, 4-way parent combinations
   crosses <- as.data.frame(
-    matrix(data = sample(row.names(genos), 40), nrow = 10, byrow = TRUE,
+    matrix(data = sample(row.names(genos), 25 * 4), nrow = 25, byrow = TRUE,
            dimnames = list(NULL, paste0("parent", 1:4))),
     stringsAsFactors = FALSE)
 
 # Run predictions
 pred_out <- mppop_predict2(M = genos, y.in = phenos, map.in = map,
                            crossing.table = crosses, self.gen = 6)
+
+# Many more possible crosses - this takes a while
+\dontrun{
+
+crosses <- as.data.frame(t(combn(x = sample(row.names(genos), 20), m = 4)), stringsAsFactors = FALSE)
+
+pred_out <- mppop_predict2(M = genos, y.in = phenos, map.in = map,
+                           crossing.table = crosses, self.gen = 6)
+
+}
 
 
 ## Pass marker effects instead of phenotypes

@@ -468,15 +468,25 @@ mppop.predict <- function(G.in, y.in, map.in, crossing.table, parents, tail.p = 
 #' data("genos")
 #' data("map")
 #'
-#' # Create 10, 4-way parent combinations
+#' # Create 25, 4-way parent combinations
 #'   crosses <- as.data.frame(
-#'     matrix(data = sample(row.names(genos), 40), nrow = 10, byrow = TRUE,
+#'     matrix(data = sample(row.names(genos), 25 * 4), nrow = 25, byrow = TRUE,
 #'            dimnames = list(NULL, paste0("parent", 1:4))),
 #'     stringsAsFactors = FALSE)
 #'
 #' # Run predictions
 #' pred_out <- mppop_predict2(M = genos, y.in = phenos, map.in = map,
 #'                            crossing.table = crosses, self.gen = 6)
+#'
+#' # Many more possible crosses - this takes a while
+#' \dontrun{
+#'
+#' crosses <- as.data.frame(t(combn(x = sample(row.names(genos), 20), m = 4)), stringsAsFactors = FALSE)
+#'
+#' pred_out <- mppop_predict2(M = genos, y.in = phenos, map.in = map,
+#'                            crossing.table = crosses, self.gen = 6)
+#'
+#' }
 #'
 #'
 #' ## Pass marker effects instead of phenotypes
@@ -686,6 +696,11 @@ mppop_predict2 <- function(M, y.in, marker.effects, map.in, crossing.table, tail
   map.in.chr <- split(map.in_use, map.in_use[,2, drop = FALSE])
   markers_chr <- lapply(map.in.chr, "[[", 1)
 
+  ## Split marker effects by trait then chromosome
+  mar_eff_mat_trait_chr <- apply(X = mar_eff_mat, MARGIN = 2, FUN = function(snps) {
+    lapply(X = markers_chr, FUN = function(snp_chr) as.matrix(snps[snp_chr]))
+  })
+
   # Calculate separate centimorgan distance matrices per chromosome
   chr_cM <- lapply(X = map.in.chr, FUN = function(x) as.matrix(dist(x[,3,drop = FALSE])))
   # Convert to recombination distance
@@ -801,11 +816,6 @@ mppop_predict2 <- function(M, y.in, marker.effects, map.in, crossing.table, tail
           }, SIMPLIFY = FALSE)
       }
 
-
-      ## Split marker effects by trait then chromosome
-      mar_eff_mat_trait_chr <- apply(X = mar_eff_mat, MARGIN = 2, FUN = function(snps) {
-        lapply(X = markers_chr, FUN = function(snp_chr) as.matrix(snps[snp_chr]))
-      })
 
       # Eq. 2 Allier et al 2019
       # Calculate variance per trait
