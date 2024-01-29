@@ -6,18 +6,37 @@
 \title{Predict genetic variance and genetic correlations in multi-parent populations
 using a deterministic model}
 \usage{
-mppop.predict(G.in, y.in, map.in, crossing.table, parents, tail.p = 0.1,
-  self.gen = Inf, DH = FALSE, model = c("rrBLUP", "BayesC"),
-  n.core = 1)
+mppop.predict(
+  G.in,
+  y.in,
+  map.in,
+  crossing.table,
+  parents,
+  tail.p = 0.1,
+  self.gen = Inf,
+  DH = FALSE,
+  model = c("rrBLUP", "BayesC"),
+  n.core = 1
+)
 
-mppop_predict2(M, y.in, marker.effects, map.in, crossing.table,
-  tail.p = 0.1, self.gen = Inf, DH = FALSE, model = c("rrBLUP",
-  "BayesC"), n.core = 1)
+mppop_predict2(
+  M,
+  y.in,
+  marker.effects,
+  map.in,
+  crossing.table,
+  tail.p = 0.1,
+  self.gen = Inf,
+  DH = FALSE,
+  model = c("rrBLUP", "BayesC"),
+  n.core = 1
+)
 }
 \arguments{
 \item{G.in}{See \code{G.in} in \code{\link[PopVar]{pop.predict}}.}
 
-\item{y.in}{See \code{y.in} in \code{\link[PopVar]{pop.predict}}.}
+\item{y.in}{A data frame of phenotypic means. The first column should include the entry name and
+subsequent columns should include phenotypic values. Ignored if \code{marker.effects} is passed.}
 
 \item{map.in}{See \code{map.in} in \code{\link[PopVar]{pop.predict}}.}
 
@@ -36,35 +55,13 @@ to be induced using gametes from F1 plants.}
 
 \item{model}{See \code{models} in \code{\link[PopVar]{pop.predict}}. Only 1 model is allowed.}
 
-\item{n.core}{Number of cores for parallelization. Parallelization is supported
-only on a Linux or Mac OS operating system; if working on a Windows system, the function
-is executed on a single core.}
+\item{n.core}{Number of cores for parallelization; only works on a Linux or Mac OS operating system.}
 
 \item{M}{A Matrix of marker genotypes of dimensions \code{nLine} x \code{nMarker}, coded as
 -1, 0, and 1.}
 
 \item{marker.effects}{A data frame of marker effects. The first column should include the marker name and
 subsequent columns should include the marker effects.}
-
-\item{y.in}{A data frame of phenotypic means. The first column should include the entry name and
-subsequent columns should include phenotypic values. Ignored if \code{marker.effects} is passed.}
-
-\item{map.in}{See \code{map.in} in \code{\link[PopVar]{pop.predict}}.}
-
-\item{crossing.table}{See \code{crossing.table} in \code{\link[PopVar]{pop.predict}}.}
-
-\item{tail.p}{See \code{tail.p} in \code{\link[PopVar]{pop.predict}}.}
-
-\item{self.gen}{The number of selfing generations in the potential cross. Can be an integer or \code{Inf} for
-recombinant inbreds. Note: \code{self.gen = 1} corresponds to an F2 population.}
-
-\item{DH}{Indicator if doubled-haploids are to be induced after the number of selfing generations indicated by
-\code{self.gen}. For example, if \code{self.gen = 0} and \code{DH = TRUE}, then doubled-haploids are asssumed
-to be induced using gametes from F1 plants.}
-
-\item{model}{See \code{models} in \code{\link[PopVar]{pop.predict}}. Only 1 model is allowed.}
-
-\item{n.core}{Number of cores for parallelization; only works on a Linux or Mac OS operating system.}
 }
 \description{
 This function returns predictions of the genotypic mean, genetic variance,
@@ -75,9 +72,9 @@ and the correlated response to selection.
 }
 \section{Functions}{
 \itemize{
-\item \code{mppop_predict2}: 
-}}
+\item \code{mppop_predict2()}: 
 
+}}
 \examples{
 
 # Load data

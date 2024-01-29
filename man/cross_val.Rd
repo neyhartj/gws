@@ -4,8 +4,15 @@
 \alias{cross_val}
 \title{Run cross-validation of a training set}
 \usage{
-cross_val(phenotypes, genotypes, cv.method = c("fractional", "k-fold"),
-  frac.train = 0.6, frac.reps = 250, folds = 10, fold.reps = 25)
+cross_val(
+  phenotypes,
+  genotypes,
+  cv.method = c("fractional", "k-fold"),
+  frac.train = 0.6,
+  frac.reps = 250,
+  folds = 10,
+  fold.reps = 25
+)
 }
 \arguments{
 \item{phenotypes}{A n x t \code{matrix} of phenotypes where n is the number

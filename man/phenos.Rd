@@ -7,7 +7,8 @@
 \alias{map}
 \alias{crosses}
 \title{Example data}
-\format{A dataset with four objects:
+\format{
+A dataset with four objects:
 
 \describe{
   \item{\code{phenos}}{A \code{data.frame} with 245 rows and 5 columns of phenotypic observations of
@@ -24,7 +25,14 @@
   \item{\code{crosses}}{A \code{data.frame} with 186 rows and 2 columns containing specific combinations
   of two parents for prospective breeding crosses.}
 
- }}
+ }
+
+An object of class \code{matrix} (inherits from \code{array}) with 245 rows and 742 columns.
+
+An object of class \code{data.frame} with 742 rows and 3 columns.
+
+An object of class \code{data.frame} with 186 rows and 2 columns.
+}
 \source{
 Data are exported from the \code{\link[PopVar]{think_barley.rda}} package.
 }

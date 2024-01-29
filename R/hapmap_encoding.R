@@ -74,31 +74,27 @@ hapmap_encoding <- function(hapmap, encoding = "rrBLUP") {
 
   if (encoding == "rrBLUP") {
 
-    # Apply over rows
-    genotype.recode <- t(apply(X = hapmap, MARGIN = 1, FUN = function(site) {
+    genotypes_recode <- hapmap[,-c(1:11)]
+    genotypes_recode <- matrix(as.numeric(NA), nrow = nrow(genotypes_recode), ncol = ncol(genotypes_recode),
+                               dimnames = list(NULL, names(genotypes_recode)))
 
+    for (i in seq_len(nrow(hapmap))) {
+      site <- hapmap[i,]
       alleles <- unlist(strsplit(x = as.character(site[2]), split = "/"))
+      genotype_calls <- unlist(site[-c(1:11)])
+      genotype_i_recode <- vector("numeric", length = length(genotype_calls))
+      genotype_i_recode[genotype_calls == "NN"] <- as.numeric(NA)
+      genotype_i_recode[genotype_calls == paste0(alleles[1], alleles[1])] <- 1
+      genotype_i_recode[genotype_calls == paste0(alleles[1], alleles[2])] <- 0
+      genotype_i_recode[genotype_calls == paste0(alleles[2], alleles[1])] <- 0
+      genotype_i_recode[genotype_calls == paste0(alleles[2], alleles[2])] <- -1
 
-      genotype.calls <- site[-c(1:11)]
+      genotypes_recode[i,] <- genotype_i_recode
 
-      # Iterate over genotypes
-      unlist(sapply(X = genotype.calls, FUN = function(call) {
-        if (call == "NN") return(NA)
-        else {
-
-          # Split up the call
-          call.split <- unlist(strsplit(as.character(call), ""))
-          # Calls are converted to the first allele (i.e. reference) such that
-          ## homozygous reference is 1, het is 0, homozygous alt is -1
-          if (all(call.split == c(alleles[1], alleles[1]))) return(1)
-          if (all(call.split == c(alleles[1], alleles[2]))) return(0)
-          if (all(call.split == c(alleles[2], alleles[1]))) return(0)
-          if (all(call.split == c(alleles[2], alleles[2]))) return(-1)
-        }
-      })) }))
+    }
 
     # Combine the matrix
-    return(cbind( hapmap[,c(1:11)], as.data.frame(genotype.recode) ))
+    return(cbind( hapmap[,c(1:11)], as.data.frame(genotypes_recode) ))
 
   }
 }

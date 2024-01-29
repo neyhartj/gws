@@ -4,9 +4,16 @@
 \alias{filter_genos}
 \title{Filter a hapmap or genotype matrix}
 \usage{
-filter_genos(genos, min.maf = 0, max.mar.missing = 1,
-  max.entry.missing = 1, max.mar.het = 1, max.entry.het = 1,
-  print.plot = FALSE, verbose = TRUE)
+filter_genos(
+  genos,
+  min.maf = 0,
+  max.mar.missing = 1,
+  max.entry.missing = 1,
+  max.mar.het = 1,
+  max.entry.het = 1,
+  print.plot = FALSE,
+  verbose = TRUE
+)
 }
 \arguments{
 \item{min.maf}{The minimum minor allele frequency cutoff to keep a SNP.}

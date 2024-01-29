@@ -4,9 +4,15 @@
 \alias{G_mat}
 \title{Calculate a genomic relationship matrix from marker information}
 \usage{
-G_mat(X, base.pop = NULL, min.MAF = NULL, max.missing = NULL,
-  impute.method = c("mean", "EM", "pass"), tol = 0.02,
-  shrink = FALSE)
+G_mat(
+  X,
+  base.pop = NULL,
+  min.MAF = NULL,
+  max.missing = NULL,
+  impute.method = c("mean", "EM", "pass"),
+  tol = 0.02,
+  shrink = FALSE
+)
 }
 \arguments{
 \item{X}{A matrix (\eqn{n \times m}) of marker data on \eqn{n} entries and
